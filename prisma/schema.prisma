@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  email        String        @unique
+  password     String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  avatar       String?
+  name         String?
+  bio          String?
+  phone        String?
+  rooms        Room[]
+  roomRequests RoomRequest[]
+
+  Notification Notification[]
+  MessageSent Message[] @relation("MessageSender")
+  MessageRecieved Message[] @relation("MessageReceiver")
+}
+
+model Room {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  description     String
+  amenities       String[]
+  userId          String   @db.ObjectId
+  user            User     @relation(references: [id], fields: [userId])
+  images          String[]
+  price           Int
+  fullCapacity    Int
+  members         String[]
+  currentCapacity Int
+  country         String?
+  city            String?
+  address         String?
+  type            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  RoomRequest RoomRequest[]
+  conversation Conversation[]
+}
+
+model RoomRequest {
+  
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  sender    User     @relation(fields: [senderId], references: [id])
+  senderId  String   @db.ObjectId
+  message   String
+  room      Room     @relation(references: [id], fields: [roomId])
+  roomId    String   @db.ObjectId
+  createdAt DateTime @default(now())
+
+}
+
+
+model Notification {
+
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  type String
+  text String
+  createdAt DateTime @default(now())
+  userId String @db.ObjectId
+  user User @relation(references: [id], fields: [userId])
+}
+
+model Message {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId String       @db.ObjectId
+  sender     User      @relation("MessageSender", fields: [senderId], references: [id])
+  senderId   String    @db.ObjectId
+  receiver   User      @relation("MessageReceiver", fields: [receiverId], references: [id])
+  receiverId String    @db.ObjectId
+  text           String
+  createdAt      DateTime     @default(now())
+}
+
+model Conversation {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  participants String[]
+  roomId     String?   @db.ObjectId 
+  room       Room?     @relation(fields: [roomId], references: [id])
+  messages   Message[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
